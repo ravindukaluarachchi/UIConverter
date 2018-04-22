@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 /**
  *
  * @author ravindu
@@ -63,6 +62,9 @@ public class UIConverter {
         if (startTable) {
             closeTable();
         }
+        if (startTree) {
+            closeTree();
+        }
         String styleClass = "";
         if (tag.equals("div")) {
             if (paraStart) {
@@ -89,7 +91,7 @@ public class UIConverter {
                 if (align == null) {
                     align = "center";
                 }
-                html += "<" + tag + " style=\"text-align:" + align +"\" >" + line + "</" + tag + ">";
+                html += "<" + tag + " style=\"text-align:" + align + "\" >" + line + "</" + tag + ">";
             } else {
                 if (lastTag.equals("content")) {
                     html += "<br/><br/>";
@@ -123,6 +125,9 @@ public class UIConverter {
         if (startTable) {
             closeTable();
         }
+        if (startTree) {
+            closeTree();
+        }
         if (spacesBefore) {
             html += "<br/><br/>";
         }
@@ -153,6 +158,9 @@ public class UIConverter {
         if (startTable) {
             closeTable();
         }
+        if (startTree) {
+            closeTree();
+        }
         if (spacesBefore) {
             html += "<br/><br/>";
         }
@@ -177,6 +185,9 @@ public class UIConverter {
         if (startTable) {
             closeTable();
         }
+        if (startTree) {
+            closeTree();
+        }
         if (spacesBefore) {
             html += "<br/><br/>";
         }
@@ -200,6 +211,9 @@ public class UIConverter {
     private boolean startPara() {
         if (startTable) {
             closeTable();
+        }
+        if (startTree) {
+            closeTree();
         }
         if (divStart && !paraStart) {
             paraStart = true;
@@ -226,6 +240,56 @@ public class UIConverter {
 
     private void closeTable() {
         makeTable("end", null);
+    }
+
+    private void startTree() {
+        if (startTable) {
+            closeTable();
+        }
+        if (startTree) {
+            closeTree();
+        }
+        startTree = true;
+        html += "<div class=\"timeline-centered\" style=\"padding:5%;\">";
+    }
+
+    private void closeTree() {
+        if (startTree) {
+            startTree = false;
+            html += "</div>\n";
+        }
+
+    }
+
+    private void addToTree(String line) {
+        String[] parts = line.split(";");
+        html += "<article class=\"timeline-entry\">\n"
+                + "    <div class=\"timeline-entry-inner\">\n"
+                + "        <div class=\"timeline-icon\">\n";
+        if (parts.length > 0) {
+            html += "            <b>" + parts[0] + "</b>\n";
+
+        } else {
+            html += "            <b> </b>\n";
+        }
+        html += "        </div>\n"
+                + "        <div class=\"timeline-label\">\n";
+        if (parts.length > 1) {
+
+            html += "            <h2>" + parts[1] + "</h2>\n";
+
+        } else {
+            html += "            <h2> </h2>\n";
+
+        }
+        if (parts.length > 2) {
+            html += "            <p>" + parts[2] + "</p>\n";
+        } else {
+            html += "            <p></p>\n";
+        }
+        html += "        </div>\n"
+                + "    </div>\n"
+                + "</article>";
     }
 
     private void makeTable(String tag, String line) {
@@ -303,6 +367,9 @@ public class UIConverter {
                 addVideo(line.substring(6), null, true, true);
             } else if (line.startsWith("file:")) {
                 addFile(line.substring(6), null, false, false);
+                //tree syntaxt////////////////////////////////////
+            } else if (line.startsWith("#steps")) {
+                startTree();
                 //table syntax ///////////////////////////////////
             } else if (line.startsWith("#table")) {
                 startTable();
@@ -311,7 +378,11 @@ public class UIConverter {
             } else if (line.startsWith("#group")) {
                 makeTable("group", line.substring(7));
             } else if (line.startsWith("-")) {
-                makeTable("td", line.substring(1));
+                if (startTable) {
+                    makeTable("td", line.substring(1));
+                } else if (startTree) {
+                    addToTree(line.substring(1));
+                }
                 //end table syntax /////////////////////////////////
             } else if (line.startsWith("#######")) {
                 addHtml("h7", line.substring(7));
@@ -336,6 +407,9 @@ public class UIConverter {
                 if (startTable) {
                     closeTable();
                 }
+                if (startTree) {
+                    closeTree();
+                }
             } else {
                 lastTag = "content";
                 addHtml(line);
@@ -344,6 +418,9 @@ public class UIConverter {
         }
         if (startTable) {
             closeTable();
+        }
+        if (startTree) {
+            closeTree();
         }
         if (paraStart) {
             closePara();
@@ -361,7 +438,7 @@ public class UIConverter {
         html = html.replace("<p> </p>", "");
         html = html.replaceAll("<p>\n *</p>", "");
         System.out.println(html);
-         html = UITemplate.header + html + UITemplate.footer;
+        html = UITemplate.header + html + UITemplate.footer;
         return html;
     }
 
